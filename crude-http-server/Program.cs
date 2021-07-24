@@ -17,29 +17,32 @@ namespace crude_http_server
         const string SERVER_IP = "127.0.0.1";
         private static bool listen = true;
 
-        private static async Task<bool> HandleClient(TcpClient client)
+        private static void HandleClient(TcpClient client)
         {
-            //await Task.Yield();
             using NetworkStream networkStream = client.GetStream();
 
             byte[] responseBuffer = new byte[client.ReceiveBufferSize];
+            byte[] buffer = new byte[client.ReceiveBufferSize];
+            int bytesRead = networkStream.Read(buffer, 0, client.ReceiveBufferSize);
 
             //Generate Response
             ResponseManager _ResponseManager = new ResponseManager();
             _ResponseManager.StatusCode = ResponseCode.Accepted;
             _ResponseManager.HeaderField.ResponseType = ContentTypes.text;
             _ResponseManager.HeaderField.TextType = TextTypes.plain;
-            //_ResponseManager.HeaderField.ContentLength = 0;
             _ResponseManager.Body = "Test client";
 
             string returnMessage = _ResponseManager.Response;
             byte[] responseBytes = Encoding.UTF8.GetBytes(returnMessage);
 
+            Thread.Sleep(5000);
             networkStream.Write(responseBytes, 0, responseBytes.Length);
-            return true;
+            networkStream.Close();
+            client.Close();
+            return;
         }
 
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
             IPAddress localAdd = IPAddress.Parse(SERVER_IP);
             TcpListener listener = new TcpListener(localAdd, PORT_NO);
@@ -47,7 +50,13 @@ namespace crude_http_server
 
             while (listen)
             {
-                Task.Run(async () => await HandleClient(await listener.AcceptTcpClientAsync()));
+                TcpClient client = listener.AcceptTcpClient();
+
+                //For each client, start a new background thread
+                new Thread(() =>
+                {
+                    HandleClient(client);
+                }).Start();
             }
 
             listener.Stop();

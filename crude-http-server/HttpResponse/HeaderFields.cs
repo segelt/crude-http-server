@@ -231,8 +231,8 @@ namespace crude_http_server.HttpResponse
             _HeaderFields.Append($"{GetPropertyDisplayName("ContentLanguage")}: {ContentLanguage}\r\n");
             _HeaderFields.Append($"{GetPropertyDisplayName("ContentType")}: {ContentType}\r\n");
             _HeaderFields.Append($"{GetPropertyDisplayName("ContentLength")}: {ContentLength}\r\n");
-            _HeaderFields.Append($"{GetPropertyDisplayName("ResponseConnectionTypeStr")}: {ResponseConnectionTypeStr}\r\n\r\n");
-            return _HeaderFields.ToString();
+            _HeaderFields.Append($"{GetPropertyDisplayName("ResponseConnectionTypeStr")}: {ResponseConnectionTypeStr}\r\n");
+            return _HeaderFields.Append("\r\n").ToString();
         }
 
         private string GetPropertyDisplayName(string propertyName)
