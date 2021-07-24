@@ -8,6 +8,6 @@ namespace crude_http_server.Utils
 {
     public static class Constants
     {
-        static readonly string Protocol = "HTTP/1.1";
+        public static readonly string Protocol = "HTTP/1.1";
     }
 }

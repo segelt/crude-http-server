@@ -334,3 +334,4 @@ ASALocalRun/
 .localhistory/
 
 crude-http-client/
+crude-http-server-tests/

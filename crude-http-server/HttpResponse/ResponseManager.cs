@@ -1,5 +1,7 @@
-﻿using System;
+﻿using crude_http_server.Utils;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -18,16 +20,46 @@ namespace crude_http_server.HttpResponse
          * [ message body ]
          */
 
-        internal StringBuilder _Response;
+        //internal StringBuilder _Response;
 
-        public string GetResponse { 
+        public string Body { get; set; }
+
+        public string Response { 
             get
             {
-                return _Response.ToString();
+                return this.GenerateResponse();
             }
         }
 
-        public HttpStatusCode StatusCode { get; set; }
+        private HeaderFields _HeaderField;
+        public HeaderFields HeaderField { 
+            get
+            {
+                if(_HeaderField == null)
+                {
+                    _HeaderField = new HeaderFields();
+                }
+                return _HeaderField;
+            }
+        }
 
+        public ResponseCode StatusCode { get; set; }
+
+        protected string GenerateResponse()
+        {
+            StringBuilder _Response = new StringBuilder("");
+            string StatusLine = $"{Constants.Protocol} {(int)StatusCode} {StatusCode.GetAttribute<DisplayAttribute>().Name}\r\n";
+            _Response.Append(StatusLine);
+            HeaderField.ContentLength = string.IsNullOrEmpty(Body) ? 0 : Body.Length;
+
+            _Response.Append(HeaderField.GenerateHeaderFields());
+
+            if (!string.IsNullOrEmpty(Body))
+            {
+                _Response.Append($"{Body}");
+            }
+
+            return _Response.ToString();
+        }
     }
 }

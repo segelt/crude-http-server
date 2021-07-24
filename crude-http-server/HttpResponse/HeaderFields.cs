@@ -27,7 +27,7 @@ namespace crude_http_server.HttpResponse
         public string ContentLanguage { get; set; } = "en";
 
         #region Content types
-        //full list obtained via https://stackoverflow.com/questions/23714383/what-are-all-the-possible-values-for-http-content-type-header
+        //full list: https://stackoverflow.com/questions/23714383/what-are-all-the-possible-values-for-http-content-type-header
 
         public enum ContentTypes
         {
@@ -133,9 +133,57 @@ namespace crude_http_server.HttpResponse
             webm
         }
 
+        public ContentTypes ResponseType
+        {
+            set
+            {
+                ResponseContentType = value.GetAttribute<DisplayAttribute>().Name;
+            }
+        }
+
+        public ApplicationTypes ApplicationType
+        {
+            set
+            {
+                ResponseSubType = value.GetAttribute<DisplayAttribute>().Name;
+            }
+        }
+
+        public AudioTypes AudioType
+        {
+            set
+            {
+                ResponseSubType = value.GetAttribute<DisplayAttribute>().Name;
+            }
+        }
+
+        public ImageTypes ImageType
+        {
+            set
+            {
+                ResponseSubType = value.GetAttribute<DisplayAttribute>().Name;
+            }
+        }
+
+        public TextTypes TextType
+        {
+            set
+            {
+                ResponseSubType = $"{value.GetAttribute<DisplayAttribute>().Name}";
+            }
+        }
+
+        public VideoTypes VideoType
+        {
+            set
+            {
+                ResponseSubType = value.GetAttribute<DisplayAttribute>().Name;
+            }
+        }
+
         //Auto-initialize to text/plain
-        public string ResponseContentType { get; set; } = ContentTypes.text.GetAttribute<DisplayNameAttribute>().DisplayName;
-        public string ResponseSubType { get; set; } = TextTypes.plain.GetAttribute<DisplayNameAttribute>().DisplayName;
+        public string ResponseContentType { get; set; } = ContentTypes.text.GetAttribute<DisplayAttribute>().Name;
+        public string ResponseSubType { get; set; } = TextTypes.plain.GetAttribute<DisplayAttribute>().Name;
 
         [Display(Name = "Content-Type")]
         public string ContentType
@@ -162,7 +210,7 @@ namespace crude_http_server.HttpResponse
         public ConnectionType ResponseConnectionType { get; set; } = ConnectionType.close; //default close
 
         [Display(Name = "Connection")]
-        private string ResponseConnectionTypeStr { 
+        public string ResponseConnectionTypeStr { 
             get
             {
                 return ResponseConnectionType.GetAttribute<DisplayAttribute>().Name;
@@ -178,12 +226,12 @@ namespace crude_http_server.HttpResponse
         {
             StringBuilder _HeaderFields = new StringBuilder("");
 
-            _HeaderFields.Append($"{GetPropertyDisplayName("Date")} : {Date}\r\n");
-            _HeaderFields.Append($"{GetPropertyDisplayName("Server")} : {Server}\r\n");
-            _HeaderFields.Append($"{GetPropertyDisplayName("ContentLanguage")} : {ContentLanguage}\r\n");
-            _HeaderFields.Append($"{GetPropertyDisplayName("ContentType")} : {ContentType}\r\n");
-            _HeaderFields.Append($"{GetPropertyDisplayName("ResponseConnectionTypeStr")} : {ResponseConnectionTypeStr}\r\n");
-
+            _HeaderFields.Append($"{GetPropertyDisplayName("Date")}: {Date}\r\n");
+            _HeaderFields.Append($"{GetPropertyDisplayName("Server")}: {Server}\r\n");
+            _HeaderFields.Append($"{GetPropertyDisplayName("ContentLanguage")}: {ContentLanguage}\r\n");
+            _HeaderFields.Append($"{GetPropertyDisplayName("ContentType")}: {ContentType}\r\n");
+            _HeaderFields.Append($"{GetPropertyDisplayName("ContentLength")}: {ContentLength}\r\n");
+            _HeaderFields.Append($"{GetPropertyDisplayName("ResponseConnectionTypeStr")}: {ResponseConnectionTypeStr}\r\n\r\n");
             return _HeaderFields.ToString();
         }
 

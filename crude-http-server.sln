@@ -5,7 +5,9 @@ VisualStudioVersion = 16.0.31402.337
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "crude-http-client", "crude-http-client\crude-http-client.csproj", "{62F61CB6-2EA2-4D93-AE1F-0D51BE8DE7F2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "crude-http-server", "crude-http-server\crude-http-server.csproj", "{63E1C6BF-9DC5-4C89-9CC1-213185F435B8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "crude-http-server", "crude-http-server\crude-http-server.csproj", "{63E1C6BF-9DC5-4C89-9CC1-213185F435B8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "crude-http-server-tests", "crude-http-server-tests\crude-http-server-tests.csproj", "{89F68D8D-2A36-43E0-ABF9-0F73025706DD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{63E1C6BF-9DC5-4C89-9CC1-213185F435B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{63E1C6BF-9DC5-4C89-9CC1-213185F435B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{63E1C6BF-9DC5-4C89-9CC1-213185F435B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89F68D8D-2A36-43E0-ABF9-0F73025706DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89F68D8D-2A36-43E0-ABF9-0F73025706DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89F68D8D-2A36-43E0-ABF9-0F73025706DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89F68D8D-2A36-43E0-ABF9-0F73025706DD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
