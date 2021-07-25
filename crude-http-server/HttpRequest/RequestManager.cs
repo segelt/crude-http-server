@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -64,10 +67,15 @@ namespace crude_http_server.HttpRequest
                 if (String.IsNullOrWhiteSpace(headerline)) break;
 
                 //Resolve headerline
-                var splitted = headerline.Split(":");
+                var HeaderLineSplitted = headerline.Split(":");
+                this.SetHeaderField(
+                    HeaderLineSplitted[0], 
+                    HeaderLineSplitted[1].TrimStart()); //Trim the SP after the colon
             }
 
-            return false;
+            int RequestBodyIndex = Request.IndexOf("\r\n\r\n");
+            Body = Request.Substring(RequestBodyIndex + 4);
+            return true;
         }
 
         public bool ParseRequestLine(string requestLine)
@@ -95,6 +103,26 @@ namespace crude_http_server.HttpRequest
             HttpVersion = RequestVersion;
             Method = RequestMethod;
             AbsoluteURI = RequestURI;
+            return true;
+        }
+
+        /// <summary>
+        /// Sets the relevant property of HeaderField object, based on the request header field name.
+        /// For instance, Content-Type header field on the request is resolved to ContentType property and its value is set to the value parameter.
+        /// </summary>
+        /// <param name="HeaderName"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetHeaderField(string HeaderName, string value)
+        {
+            PropertyInfo targetProperty = typeof(RequestHeaderFields).GetProperties()
+                .FirstOrDefault(p => p.GetCustomAttribute<DescriptionAttribute>().Description == HeaderName);
+
+            if(targetProperty != null)
+            {
+                targetProperty.SetValue(HeaderField, value);
+            }
+
             return true;
         }
     }
