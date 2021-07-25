@@ -31,13 +31,13 @@ namespace crude_http_server.HttpResponse
             }
         }
 
-        private HeaderFields _HeaderField;
-        public HeaderFields HeaderField { 
+        private ResponseHeaderFields _HeaderField;
+        public ResponseHeaderFields HeaderField { 
             get
             {
                 if(_HeaderField == null)
                 {
-                    _HeaderField = new HeaderFields();
+                    _HeaderField = new ResponseHeaderFields();
                 }
                 return _HeaderField;
             }

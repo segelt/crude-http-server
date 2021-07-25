@@ -7,7 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using static crude_http_server.HttpResponse.HeaderFields;
+using static crude_http_server.HttpResponse.ResponseHeaderFields;
 
 namespace crude_http_server
 {
