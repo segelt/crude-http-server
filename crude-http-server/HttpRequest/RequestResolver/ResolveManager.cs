@@ -33,6 +33,41 @@ namespace crude_http_server.HttpRequest.RequestResolver
             return true;
         }
 
+        public static string ResolveRequestURI(string RequestURI)
+        {
+            string AbsolutePath = RequestURI;
+            //Absolute Path or Relative Path
+            if (RequestURI.IndexOf("://") > 0)
+            {
+                Uri AbsoluteURI = new Uri(RequestURI);
+                AbsolutePath = AbsoluteURI.AbsolutePath;
+            }
+
+            return AbsolutePath;
+        }
+
+        public static Dictionary<string, string> DecodeQueryParameters(string RequestURI)
+        {
+            int QueryIndex = RequestURI.IndexOf('?');
+
+            if (string.IsNullOrEmpty(RequestURI) ||
+                QueryIndex == -1 ||
+                QueryIndex >= RequestURI.Length - 1)
+            {
+                return new Dictionary<string, string>();
+            }
+
+            string QueryStart = RequestURI.Substring(QueryIndex + 1);
+
+            return QueryStart
+                            .Split(new[] { '&', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                            .Select(parameter => parameter.Split(new[] { '=' }, StringSplitOptions.RemoveEmptyEntries))
+                            .GroupBy(parts => parts[0],
+                                     parts => parts.Length > 2 ? string.Join("=", parts, 1, parts.Length - 1) : (parts.Length > 1 ? parts[1] : ""))
+                            .ToDictionary(grouping => grouping.Key,
+                                          grouping => string.Join(",", grouping));
+        }
+
         static IEnumerable<Type> GetTypesWithControllerAttribute(Assembly assembly)
         {
             foreach (Type type in assembly.GetTypes())
