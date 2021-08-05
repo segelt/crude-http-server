@@ -46,6 +46,30 @@ namespace crude_http_server.HttpRequest.RequestResolver
             return AbsolutePath;
         }
 
+        public static void ParseRequestPath(
+            ref RequestPath Request,
+            string RequestAbsolutePath)
+        {
+            int QueryStringIndex = RequestAbsolutePath.IndexOf('?');
+            string Directory = RequestAbsolutePath;
+
+            Request.Path = Directory
+                .Substring(0, QueryStringIndex) //Get only the parts before '?'
+                .TrimStart('/') //Trim trailing '/' (if there is any)
+                .Split('/')
+                .ToList();
+
+            //If this URI also contains query parameters
+            if(QueryStringIndex != -1)
+            {
+                //Get the query parameters as well
+                string QueryParametersOfURI = Directory.Substring(QueryStringIndex);
+
+                Request.QueryParameters = DecodeQueryParameters(QueryParametersOfURI);
+            }
+
+        }
+
         public static Dictionary<string, string> DecodeQueryParameters(string RequestURI)
         {
             int QueryIndex = RequestURI.IndexOf('?');
