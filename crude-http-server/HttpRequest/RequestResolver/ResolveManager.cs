@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace crude_http_server.HttpRequest.RequestResolver
@@ -46,26 +47,42 @@ namespace crude_http_server.HttpRequest.RequestResolver
             return AbsolutePath;
         }
 
-        public static void ParseRequestPath(
+        public static void ParseRequest(
             ref RequestPath Request,
-            string RequestAbsolutePath)
+            string RequestUrl)
         {
-            int QueryStringIndex = RequestAbsolutePath.IndexOf('?');
-            string Directory = RequestAbsolutePath;
+            var Pattern = @"((?:http:|https)\/\/)?(.*)";
+            var MatchGroups = Regex.Match(RequestUrl, Pattern)
+                .Groups;
+            RequestUrl = MatchGroups[MatchGroups.Count - 1].ToString();
 
-            Request.Path = Directory
-                .Substring(0, QueryStringIndex) //Get only the parts before '?'
-                .TrimStart('/') //Trim trailing '/' (if there is any)
-                .Split('/')
-                .ToList();
+            int AbsolutePathIndex = RequestUrl.IndexOf('/');
+            string RequestDomain = RequestUrl.Substring(0, AbsolutePathIndex);
+            Request.Host = RequestDomain;
+
+            string AbsolutePath = RequestUrl.Substring(AbsolutePathIndex);
+            int QueryStringIndex = AbsolutePath.IndexOf('?');
+            string Directory = AbsolutePath;
 
             //If this URI also contains query parameters
             if(QueryStringIndex != -1)
             {
+                Request.Path = Directory
+                    .Substring(0, QueryStringIndex) //Get only the parts before '?'
+                    .TrimStart('/') //Trim trailing '/' (if there is any)
+                    .Split('/')
+                    .ToList();
+
                 //Get the query parameters as well
                 string QueryParametersOfURI = Directory.Substring(QueryStringIndex);
-
                 Request.QueryParameters = DecodeQueryParameters(QueryParametersOfURI);
+            }
+            else
+            {
+                Request.Path = Directory
+                    .TrimStart('/') //Trim trailing '/' (if there is any)
+                    .Split('/')
+                    .ToList();
             }
 
         }
@@ -103,4 +120,4 @@ namespace crude_http_server.HttpRequest.RequestResolver
             }
         }
     }
-}
+}//Regex.Match(url, @"(http:|https:)\/\/(.*?)\/");
