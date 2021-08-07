@@ -52,9 +52,8 @@ namespace crude_http_server.HttpRequest.RequestResolver
             string RequestUrl)
         {
             var Pattern = @"((?:http:|https)\/\/)?(.*)";
-            var MatchGroups = Regex.Match(RequestUrl, Pattern)
-                .Groups;
-            RequestUrl = MatchGroups[MatchGroups.Count - 1].ToString();
+            RequestUrl = Regex.Match(RequestUrl, Pattern)
+                .Groups[^1].ToString();
 
             int AbsolutePathIndex = RequestUrl.IndexOf('/');
             string RequestDomain = RequestUrl.Substring(0, AbsolutePathIndex);
