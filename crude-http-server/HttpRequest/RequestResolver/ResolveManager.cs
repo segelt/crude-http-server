@@ -108,14 +108,30 @@ namespace crude_http_server.HttpRequest.RequestResolver
             }
         }
 
-        public static bool ResolveMethod(string Path, string SubPath, string RequestMethod)
+        public static bool ResolveMethod(RequestManager ReceivedRequest)
         {
             //Todo - seperate the server implementation
             var types = GetTypesWithControllerAttribute(Assembly.GetExecutingAssembly());
 
+            string MainRoute = "";
+            string SubPath = "";
+            RequestPath InputPath = ReceivedRequest._RequestPath;
+
+            if(InputPath.Path != null && InputPath.Path.Count > 0)
+            {
+                MainRoute = InputPath.Path[0];
+
+                if(InputPath.Path.Count > 1)
+                {
+                    SubPath = string.Join("/", InputPath
+                        .Path
+                        .ToArray()[1..]);
+                }
+            }
+
             //Get only the class that has the corresponding route path in its controller attribute
             Type TargetClass = types
-                .FirstOrDefault(e => e.GetCustomAttribute<ControllerAttribute>().RoutePath == Path);
+                .FirstOrDefault(e => e.GetCustomAttribute<ControllerAttribute>().RoutePath == MainRoute);
 
             if (TargetClass == null) return false; //Todo - Handle 404
 
