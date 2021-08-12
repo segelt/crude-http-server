@@ -15,5 +15,11 @@ namespace crude_http_server.Controllers
         {
             return (int)DateTime.Now.DayOfWeek;
         }
+
+        [Route(RequestMethod = "GET", RoutePath = "PrintInput")]
+        public string PrintInput(string Input)
+        {
+            return $"Hello from controller. I have received {Input} as input!";
+        }
     }
 }

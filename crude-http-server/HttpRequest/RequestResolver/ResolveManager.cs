@@ -11,7 +11,7 @@ namespace crude_http_server.HttpRequest.RequestResolver
 {
     public static class ResolveManager
     {
-        public static string ValidUriPattern = @"^(?:(?:http|https):\/\/)?([a-zA-Z0-9.:]*)(\/[a-zA-Z0-9\/]*)?(\?.*)?";
+        public static string ValidUriPattern = @"^(?:(?:http|https):\/\/)?([a-zA-Z0-9.:]*)((?!\/{2,})\/[a-zA-Z0-9\/]*)?(\?.*)?$";
         
         /// <summary>
         /// Validates if a given string is to be accepted as a request uri. http | https schemes are supported (even though this server implementation
@@ -34,10 +34,17 @@ namespace crude_http_server.HttpRequest.RequestResolver
         /// </summary>
         /// <param name="Request"></param>
         /// <param name="RequestUrl"></param>
-        public static void ParseRequest(
-            ref RequestPath Request,
+        public static RequestPath ParseRequest(
             string RequestUrl)
         {
+            if (!ValidateRequestUri(RequestUrl))
+            {
+                return null;
+            }
+
+
+            RequestPath Request = new RequestPath();
+
             //To do -- implement unit tests for this method
             Match RegexMatch = Regex.Match(RequestUrl, ValidUriPattern);
 
@@ -45,16 +52,25 @@ namespace crude_http_server.HttpRequest.RequestResolver
             Request.Host = RequestDomain;
 
             string AbsolutePath = RegexMatch.Groups[2].ToString();
-            Request.Path = AbsolutePath
+            if (string.IsNullOrEmpty(AbsolutePath))
+            {
+                Request.Path = new List<string>(){ "/" };
+            }
+            else
+            {
+                Request.Path = AbsolutePath
                 .TrimStart('/')
                 .Split('/')
                 .ToList();
+            }
 
             string QueryString = RegexMatch.Groups[3].ToString();
             if (!string.IsNullOrEmpty(QueryString))
             {
                 Request.QueryParameters = DecodeQueryParameters(QueryString);
             }
+
+            return Request;
         }
 
         public static Dictionary<string, string> DecodeQueryParameters(string RequestURI)
@@ -77,19 +93,6 @@ namespace crude_http_server.HttpRequest.RequestResolver
                                      parts => parts.Length > 2 ? string.Join("=", parts, 1, parts.Length - 1) : (parts.Length > 1 ? parts[1] : ""))
                             .ToDictionary(grouping => grouping.Key,
                                           grouping => string.Join(",", grouping));
-        }
-
-        public static string ResolveRequestURI(string RequestURI)
-        {
-            string AbsolutePath = RequestURI;
-            //Absolute Path or Relative Path
-            if (RequestURI.IndexOf("://") > 0)
-            {
-                Uri AbsoluteURI = new Uri(RequestURI);
-                AbsolutePath = AbsoluteURI.AbsolutePath;
-            }
-
-            return AbsolutePath;
         }
 
         #region Resolving server methods

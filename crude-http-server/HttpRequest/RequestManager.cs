@@ -1,4 +1,5 @@
-﻿using System;
+﻿using crude_http_server.HttpRequest.RequestResolver;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -21,7 +22,8 @@ namespace crude_http_server.HttpRequest
         #region Request Line
 
         public string Method { get; set; }
-        public string AbsoluteURI { get; set; }
+        //public string AbsoluteURI { get; set; }
+        public RequestPath _RequestPath;
         public string HttpVersion { get; set; }
 
         #endregion
@@ -78,7 +80,13 @@ namespace crude_http_server.HttpRequest
             return true;
         }
 
-        public bool ParseRequestLine(string requestLine)
+        /// <summary>
+        /// Utility method to parse the request line
+        /// E.g. "GET /index HTTP/1.1"
+        /// </summary>
+        /// <param name="requestLine"></param>
+        /// <returns></returns>
+        private bool ParseRequestLine(string requestLine)
         {
             var components = requestLine.Split(" ");
 
@@ -102,7 +110,10 @@ namespace crude_http_server.HttpRequest
 
             HttpVersion = RequestVersion;
             Method = RequestMethod;
-            AbsoluteURI = RequestURI;
+
+            //Parse the request URI
+            _RequestPath = ResolveManager.ParseRequest(RequestURI);
+
             return true;
         }
 
