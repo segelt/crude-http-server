@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace crude_http_server.HttpRequest
@@ -25,6 +26,8 @@ namespace crude_http_server.HttpRequest
         //public string AbsoluteURI { get; set; }
         public RequestPath _RequestPath;
         public string HttpVersion { get; set; }
+
+        public string ValidUriPattern = @"^(?:(?:http|https):\/\/)?([a-zA-Z0-9.:]*)((?!\/{2,})\/[a-zA-Z0-9\/]*)?(\?.*)?$";
 
         #endregion
 
@@ -112,10 +115,96 @@ namespace crude_http_server.HttpRequest
             Method = RequestMethod;
 
             //Parse the request URI
-            _RequestPath = ResolveManager.ParseRequest(RequestURI);
+            return ParseRequestURI(RequestURI);
+        }
+        
+        #region Parsing Request URI
+
+        /// <summary>
+        /// Parses a given request uri and extracts host, absolute path, and query string parameters
+        /// </summary>
+        /// <param name="Request"></param>
+        /// <param name="RequestUrl"></param>
+        public bool ParseRequestURI(
+            string RequestUrl)
+        {
+            if (!ValidateRequestUri(RequestUrl))
+            {
+                return false;
+            }
+
+
+            if (this._RequestPath == null) {
+                this._RequestPath = new RequestPath();
+            }
+
+            //To do -- implement unit tests for this method
+            Match RegexMatch = Regex.Match(RequestUrl, ValidUriPattern);
+
+            string RequestDomain = RegexMatch.Groups[1].ToString();
+            this._RequestPath.Host = RequestDomain;
+
+            string AbsolutePath = RegexMatch.Groups[2].ToString();
+            if (string.IsNullOrEmpty(AbsolutePath))
+            {
+                this._RequestPath.Path = new List<string>() { "/" };
+            }
+            else
+            {
+                this._RequestPath.Path = AbsolutePath
+                .TrimStart('/')
+                .Split('/')
+                .ToList();
+            }
+
+            string QueryString = RegexMatch.Groups[3].ToString();
+            if (!string.IsNullOrEmpty(QueryString))
+            {
+                this._RequestPath.QueryParameters = DecodeQueryParameters(QueryString);
+            }
 
             return true;
         }
+
+        public Dictionary<string, string> DecodeQueryParameters(string RequestURI)
+        {
+            int QueryIndex = RequestURI.IndexOf('?');
+
+            if (string.IsNullOrEmpty(RequestURI) ||
+                QueryIndex == -1 ||
+                QueryIndex >= RequestURI.Length - 1)
+            {
+                return new Dictionary<string, string>();
+            }
+
+            string QueryStart = RequestURI.Substring(QueryIndex + 1);
+
+            return QueryStart
+                            .Split(new[] { '&', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                            .Select(parameter => parameter.Split(new[] { '=' }, StringSplitOptions.RemoveEmptyEntries))
+                            .GroupBy(parts => parts[0],
+                                     parts => parts.Length > 2 ? string.Join("=", parts, 1, parts.Length - 1) : (parts.Length > 1 ? parts[1] : ""))
+                            .ToDictionary(grouping => grouping.Key,
+                                          grouping => string.Join(",", grouping));
+        }
+
+        /// <summary>
+        /// Validates if a given string is to be accepted as a request uri. http | https schemes are supported (even though this server implementation
+        /// is specifically http)
+        /// </summary>
+        /// <param name="RequestUri"></param>
+        /// <returns></returns>
+        public bool ValidateRequestUri(string RequestUri)
+        {
+            if (string.IsNullOrEmpty(RequestUri))
+            {
+                return false;
+            }
+
+            return Regex.Match(RequestUri, ValidUriPattern).Success;
+        }
+
+        #endregion
 
         /// <summary>
         /// Sets the relevant property of HeaderField object, based on the request header field name.

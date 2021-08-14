@@ -21,5 +21,11 @@ namespace crude_http_server.Controllers
         {
             return $"Hello from controller. I have received {Input} as input!";
         }
+
+        [Route(RequestMethod = "GET", RoutePath = "MultiplyAndPrint")]
+        public string MultiplyAndPrint(int param1, int param2, string InterpolateParam)
+        {
+            return $"Multiplication of {param1} and {param2} is {param1 * param2}. This is a test: {InterpolateParam}!";
+        }
     }
 }

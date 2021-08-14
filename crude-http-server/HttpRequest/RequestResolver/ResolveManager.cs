@@ -11,90 +11,6 @@ namespace crude_http_server.HttpRequest.RequestResolver
 {
     public static class ResolveManager
     {
-        public static string ValidUriPattern = @"^(?:(?:http|https):\/\/)?([a-zA-Z0-9.:]*)((?!\/{2,})\/[a-zA-Z0-9\/]*)?(\?.*)?$";
-        
-        /// <summary>
-        /// Validates if a given string is to be accepted as a request uri. http | https schemes are supported (even though this server implementation
-        /// is specifically http)
-        /// </summary>
-        /// <param name="RequestUri"></param>
-        /// <returns></returns>
-        public static bool ValidateRequestUri(string RequestUri)
-        {
-            if(string.IsNullOrEmpty(RequestUri))
-            {
-                return false;
-            }
-
-            return Regex.Match(RequestUri, ValidUriPattern).Success;
-        }
-
-        /// <summary>
-        /// Parses a given request uri and extracts host, absolute path, and query string parameters
-        /// </summary>
-        /// <param name="Request"></param>
-        /// <param name="RequestUrl"></param>
-        public static RequestPath ParseRequest(
-            string RequestUrl)
-        {
-            if (!ValidateRequestUri(RequestUrl))
-            {
-                return null;
-            }
-
-
-            RequestPath Request = new RequestPath();
-
-            //To do -- implement unit tests for this method
-            Match RegexMatch = Regex.Match(RequestUrl, ValidUriPattern);
-
-            string RequestDomain = RegexMatch.Groups[1].ToString();
-            Request.Host = RequestDomain;
-
-            string AbsolutePath = RegexMatch.Groups[2].ToString();
-            if (string.IsNullOrEmpty(AbsolutePath))
-            {
-                Request.Path = new List<string>(){ "/" };
-            }
-            else
-            {
-                Request.Path = AbsolutePath
-                .TrimStart('/')
-                .Split('/')
-                .ToList();
-            }
-
-            string QueryString = RegexMatch.Groups[3].ToString();
-            if (!string.IsNullOrEmpty(QueryString))
-            {
-                Request.QueryParameters = DecodeQueryParameters(QueryString);
-            }
-
-            return Request;
-        }
-
-        public static Dictionary<string, string> DecodeQueryParameters(string RequestURI)
-        {
-            int QueryIndex = RequestURI.IndexOf('?');
-
-            if (string.IsNullOrEmpty(RequestURI) ||
-                QueryIndex == -1 ||
-                QueryIndex >= RequestURI.Length - 1)
-            {
-                return new Dictionary<string, string>();
-            }
-
-            string QueryStart = RequestURI.Substring(QueryIndex + 1);
-
-            return QueryStart
-                            .Split(new[] { '&', ';' }, StringSplitOptions.RemoveEmptyEntries)
-                            .Select(parameter => parameter.Split(new[] { '=' }, StringSplitOptions.RemoveEmptyEntries))
-                            .GroupBy(parts => parts[0],
-                                     parts => parts.Length > 2 ? string.Join("=", parts, 1, parts.Length - 1) : (parts.Length > 1 ? parts[1] : ""))
-                            .ToDictionary(grouping => grouping.Key,
-                                          grouping => string.Join(",", grouping));
-        }
-
         #region Resolving server methods
 
         static IEnumerable<Type> GetTypesWithControllerAttribute(Assembly assembly)
@@ -142,6 +58,93 @@ namespace crude_http_server.HttpRequest.RequestResolver
             if (TargetMethod == null) return false; //Todo - Handle 404
 
             //Invoke the controller action
+            //1- Create instance of the controller
+            var _TargetClassInstance = Activator.CreateInstance(TargetClass);
+
+            //Prepare parameters
+            //var parameters = TargetMethod
+            //    .GetParameters()
+            //    .Select((e, index) => new
+            //    {
+            //        index = index,
+            //        parameterName = e.Name,
+            //        parameterType = e.ParameterType
+            //    })
+            //    .ToArray();
+            var parameters = TargetMethod.GetParameters();
+            object[] targetParameters = null;
+            if(parameters.Length > 0)
+            {
+                targetParameters = new object[parameters.Length];
+                for(int index = 0; index < parameters.Length; index++)
+                {
+                    ParameterInfo parameter = parameters[index];
+                    bool keyExists = ReceivedRequest
+                        ._RequestPath
+                        .QueryParameters
+                        .TryGetValue(parameter.Name, out string ParamValue);
+
+                    if (keyExists)
+                    {
+                        switch (parameter.ParameterType)
+                        {
+                            case Type type when type == typeof(char):
+                                break;
+                            default:
+                                break;
+                        }
+                        //try and parse the value
+                        switch (parameter.ParameterType)
+                        {
+                            case Type type when type == typeof(int):
+                                bool parsableInt = Int32.TryParse(ParamValue, out int _ResultInt);
+                                if (!parsableInt)
+                                {
+                                    //return parse exception
+                                    return false;
+                                    //break;
+                                }
+                                targetParameters[index] = _ResultInt;
+                                break;
+                            case Type type when type == typeof(string):
+                                targetParameters[index] = ParamValue;
+                                break;
+                            case Type type when type == typeof(char):
+                                bool parsableChar = char.TryParse(ParamValue, out char _ResultChar);
+                                if (!parsableChar)
+                                {
+                                    //return parse exception
+                                    return false;
+                                    //break;
+                                }
+                                targetParameters[index] = _ResultChar;
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        if (parameter.HasDefaultValue)
+                        {
+                            targetParameters[index] = parameter.DefaultValue;
+                        }
+                        else
+                        {
+                            //return parameter exception
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            if(TargetMethod.ReturnType == typeof(void))
+            {
+                TargetMethod.Invoke(_TargetClassInstance, targetParameters);
+                return true;
+            }
+            else
+            {
+                var response = TargetMethod.Invoke(_TargetClassInstance, targetParameters);
+            }
             //TargetMethod.Invoke();
 
             return true;
@@ -149,4 +152,4 @@ namespace crude_http_server.HttpRequest.RequestResolver
 
         #endregion
     }
-}//Regex.Match(url, @"(http:|https:)\/\/(.*?)\/");
+}
