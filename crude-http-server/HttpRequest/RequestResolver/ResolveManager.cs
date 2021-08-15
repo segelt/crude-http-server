@@ -1,4 +1,5 @@
-﻿using crude_http_server.HttpRequest.Attributes;
+﻿using crude_http_server.Exceptions;
+using crude_http_server.HttpRequest.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +25,7 @@ namespace crude_http_server.HttpRequest.RequestResolver
             }
         }
 
-        public static bool ResolveMethod(RequestManager ReceivedRequest)
+        public static object? ResolveMethod(RequestManager ReceivedRequest)
         {
             //Todo - seperate the server implementation
             var types = GetTypesWithControllerAttribute(Assembly.GetExecutingAssembly());
@@ -49,13 +50,13 @@ namespace crude_http_server.HttpRequest.RequestResolver
             Type TargetClass = types
                 .FirstOrDefault(e => e.GetCustomAttribute<ControllerAttribute>().RoutePath == MainRoute);
 
-            if (TargetClass == null) return false; //Todo - Handle 404
+            if (TargetClass == null) throw new MethodNotResolvedException(ReceivedRequest._RequestPath.FullURI); //Todo - Handle 404
 
             var TargetMethod = TargetClass.GetMethods()
                 .Where(e => e.IsDefined(typeof(RouteAttribute), false))
                 .FirstOrDefault(e => e.GetCustomAttribute<RouteAttribute>().RoutePath == SubPath);
 
-            if (TargetMethod == null) return false; //Todo - Handle 404
+            if (TargetMethod == null) throw new MethodNotResolvedException(ReceivedRequest._RequestPath.FullURI); //Todo - Handle 404
 
             //Invoke the controller action
             //1- Create instance of the controller
@@ -86,13 +87,6 @@ namespace crude_http_server.HttpRequest.RequestResolver
 
                     if (keyExists)
                     {
-                        switch (parameter.ParameterType)
-                        {
-                            case Type type when type == typeof(char):
-                                break;
-                            default:
-                                break;
-                        }
                         //try and parse the value
                         switch (parameter.ParameterType)
                         {
@@ -101,7 +95,7 @@ namespace crude_http_server.HttpRequest.RequestResolver
                                 if (!parsableInt)
                                 {
                                     //return parse exception
-                                    return false;
+                                    throw new ParameterNotResolvedException(ReceivedRequest._RequestPath.FullURI);
                                     //break;
                                 }
                                 targetParameters[index] = _ResultInt;
@@ -114,7 +108,7 @@ namespace crude_http_server.HttpRequest.RequestResolver
                                 if (!parsableChar)
                                 {
                                     //return parse exception
-                                    return false;
+                                    throw new ParameterNotResolvedException(ReceivedRequest._RequestPath.FullURI);
                                     //break;
                                 }
                                 targetParameters[index] = _ResultChar;
@@ -130,7 +124,7 @@ namespace crude_http_server.HttpRequest.RequestResolver
                         else
                         {
                             //return parameter exception
-                            return false;
+                            throw new ParameterNotResolvedException(ReceivedRequest._RequestPath.FullURI);
                         }
                     }
                 }
@@ -144,10 +138,8 @@ namespace crude_http_server.HttpRequest.RequestResolver
             else
             {
                 var response = TargetMethod.Invoke(_TargetClassInstance, targetParameters);
+                return response;
             }
-            //TargetMethod.Invoke();
-
-            return true;
         } 
 
         #endregion

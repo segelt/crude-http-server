@@ -8,6 +8,7 @@ namespace crude_http_server.HttpRequest
 {
     public class RequestPath
     {
+        public string FullURI { get; set; }
         public List<string> Path { get; set; }
         public string Host { get; set; }
 

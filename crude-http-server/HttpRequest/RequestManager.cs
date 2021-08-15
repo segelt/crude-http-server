@@ -138,6 +138,8 @@ namespace crude_http_server.HttpRequest
                 this._RequestPath = new RequestPath();
             }
 
+            _RequestPath.FullURI = RequestUrl;
+
             //To do -- implement unit tests for this method
             Match RegexMatch = Regex.Match(RequestUrl, ValidUriPattern);
 
