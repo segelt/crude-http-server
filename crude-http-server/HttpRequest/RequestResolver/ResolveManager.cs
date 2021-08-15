@@ -1,5 +1,6 @@
 ﻿using crude_http_server.Exceptions;
 using crude_http_server.HttpRequest.Attributes;
+using crude_http_server.HttpResponse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +26,12 @@ namespace crude_http_server.HttpRequest.RequestResolver
             }
         }
 
-        public static object? ResolveMethod(RequestManager ReceivedRequest)
+        /// <summary>
+        /// Returns the actual resolved method
+        /// </summary>
+        /// <param name="ReceivedRequest"></param>
+        /// <returns></returns>
+        public static ResponseManager ResolveMethod(RequestManager ReceivedRequest)
         {
             //Todo - seperate the server implementation
             var types = GetTypesWithControllerAttribute(Assembly.GetExecutingAssembly());
@@ -62,16 +68,6 @@ namespace crude_http_server.HttpRequest.RequestResolver
             //1- Create instance of the controller
             var _TargetClassInstance = Activator.CreateInstance(TargetClass);
 
-            //Prepare parameters
-            //var parameters = TargetMethod
-            //    .GetParameters()
-            //    .Select((e, index) => new
-            //    {
-            //        index = index,
-            //        parameterName = e.Name,
-            //        parameterType = e.ParameterType
-            //    })
-            //    .ToArray();
             var parameters = TargetMethod.GetParameters();
             object[] targetParameters = null;
             if(parameters.Length > 0)
@@ -130,18 +126,29 @@ namespace crude_http_server.HttpRequest.RequestResolver
                 }
             }
 
-            if(TargetMethod.ReturnType == typeof(void))
+            Type ReturnedType = TargetMethod.ReturnType;
+            if(ReturnedType == typeof(ResponseManager) || ReturnedType.IsSubclassOf(typeof(ResponseManager)))
             {
-                TargetMethod.Invoke(_TargetClassInstance, targetParameters);
-                return true;
+                var response = TargetMethod.Invoke(_TargetClassInstance, targetParameters);
+
+                return (ResponseManager)response; //Works with generic type as well.
+
+                ////Check if it is generic
+                //if (ReturnedType.IsGenericType)
+                //{
+                //    //Type GenericType = ReturnedType.GetGenericArguments()[0];
+                //    return (ResponseManager)response;
+                //}
+                //else
+                //{
+                //    return (ResponseManager)response;
+                //}
             }
             else
             {
-                var response = TargetMethod.Invoke(_TargetClassInstance, targetParameters);
-                return response;
+                throw new Exception();
             }
         } 
-
         #endregion
     }
 }
