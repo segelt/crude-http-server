@@ -14,6 +14,7 @@ namespace crude_http_server.Exceptions
         public virtual string Description { get; set; }
 
         public HttpExceptionBase() : base() { }
+        public HttpExceptionBase(string Description) : base(Description) { }
         public HttpExceptionBase(string Description, string RequestURI) : base($"{Description} Request URI: {RequestURI}") {
             this.SetRequestURI(RequestURI);
         }

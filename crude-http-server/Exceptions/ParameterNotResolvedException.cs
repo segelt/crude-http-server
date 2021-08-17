@@ -12,7 +12,6 @@ namespace crude_http_server.Exceptions
         public ParameterNotResolvedException(string RequestUri) : base("Parameters could not be resolved for the target method.", RequestUri)
         {
             this.HttpResponseCode = ResponseCode.NotFound;
-            this.SetRequestURI(RequestURI);
         }
     }
 }

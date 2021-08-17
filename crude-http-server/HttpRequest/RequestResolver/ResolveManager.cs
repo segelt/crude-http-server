@@ -154,9 +154,17 @@ namespace crude_http_server.HttpRequest.RequestResolver
         {
             RequestManager _Request = new RequestManager();
 
-            _Request.ParseRequest(Request);
+            try
+            {
+                _Request.ParseRequest(Request);
 
-            return ResolveMethod(_Request);
+                return ResolveMethod(_Request);
+            }
+            catch(HttpExceptionBase ex)
+            {
+                // return error page
+                return null;
+            }
         }
         #endregion
     }

@@ -1,4 +1,5 @@
-﻿using crude_http_server.HttpRequest.RequestResolver;
+﻿using crude_http_server.Exceptions;
+using crude_http_server.HttpRequest.RequestResolver;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -51,21 +52,18 @@ namespace crude_http_server.HttpRequest
 
         public string Body { get; set; }
 
-        public bool ParseRequest(string Request)
+        public void ParseRequest(string Request)
         {
             if (string.IsNullOrEmpty(Request))
             {
-                return false;
+                throw new RequestNotParsedException(RequestNotParsedException.RequestLineEmpty);
             }
 
             var lines = Request.Split("\r\n");
 
             string RequestLine = lines[0];
-            
-            if (!ParseRequestLine(RequestLine))
-            {
-                return false;
-            }
+
+            ParseRequestLine(RequestLine);
 
             foreach(var headerline in lines.Skip(1))
             {
@@ -80,7 +78,6 @@ namespace crude_http_server.HttpRequest
 
             int RequestBodyIndex = Request.IndexOf("\r\n\r\n");
             Body = Request.Substring(RequestBodyIndex + 4);
-            return true;
         }
 
         /// <summary>
@@ -89,11 +86,14 @@ namespace crude_http_server.HttpRequest
         /// </summary>
         /// <param name="requestLine"></param>
         /// <returns></returns>
-        private bool ParseRequestLine(string requestLine)
+        private void ParseRequestLine(string requestLine)
         {
             var components = requestLine.Split(" ");
 
-            if (components.Length != 3) return false;
+            if (components.Length != 3)
+            {
+                throw new RequestNotParsedException(RequestNotParsedException.RequestLineInvalid);
+            }
 
             string RequestMethod = components[0];
             string RequestURI = components[1];
@@ -102,20 +102,24 @@ namespace crude_http_server.HttpRequest
             //validate
             if(!Utils.Constants.RequestMethods.Contains(RequestMethod))
             {
-                return false;
+                throw new RequestNotParsedException(RequestNotParsedException.RequestMethodInvalid);
             }
 
             //resolve URI
             if(RequestVersion != Utils.Constants.Protocol)
             {
-                return false;
+                throw new RequestNotParsedException(RequestNotParsedException.RequestProtocolInvalid);
             }
 
             HttpVersion = RequestVersion;
             Method = RequestMethod;
 
             //Parse the request URI
-            return ParseRequestURI(RequestURI);
+            if (!ParseRequestURI(RequestURI))
+            {
+                throw new RequestNotParsedException(RequestNotParsedException.RequestURIInvalid);
+            }
+
         }
         
         #region Parsing Request URI
