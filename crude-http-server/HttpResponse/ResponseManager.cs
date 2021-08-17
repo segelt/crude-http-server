@@ -79,12 +79,21 @@ namespace crude_http_server.HttpResponse
 
     public class ErroneousResponse<T> : ResponseManager where T : HttpExceptionBase
     {
-        public T ThrownException { get; set; }
+        private T _ThrownException;
+        public T ThrownException
+        {
+            get { return _ThrownException; }
+            set
+            {
+                _ThrownException = value;
+                this.StatusCode = value.HttpResponseCode;
+            }
+        }
 
         protected override string GenerateResponse()
         {
             StringBuilder _Response = new StringBuilder("");
-            string StatusLine = $"{Constants.Protocol} {(int)ThrownException.HttpResponseCode} {ThrownException.HttpResponseCode.GetAttribute<DisplayAttribute>()?.Name}\r\n";
+            string StatusLine = $"{Constants.Protocol} {(int)StatusCode} {StatusCode.GetAttribute<DisplayAttribute>()?.Name}\r\n";
             _Response.Append(StatusLine);
 
             string BodyInStrFormat = $"{ThrownException.Message} \nStack trace ------ \n{ThrownException.StackTrace}";
