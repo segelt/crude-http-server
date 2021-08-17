@@ -1,4 +1,5 @@
-﻿using crude_http_server.HttpResponse;
+﻿using crude_http_server.HttpRequest.RequestResolver;
+using crude_http_server.HttpResponse;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,16 +29,16 @@ namespace crude_http_server
             string RequestMessage = Encoding.UTF8.GetString(buffer);
 
             //Generate Response
-            ResponseManager<string> _ResponseManager = new ResponseManager<string>();
-            _ResponseManager.StatusCode = ResponseCode.Accepted;
-            _ResponseManager.HeaderField.ResponseType = ContentTypes.text;
-            _ResponseManager.HeaderField.TextType = TextTypes.plain;
-            _ResponseManager.Body = "Test client";
+            var _ResponseManager = ResolveManager.ResolveRequest(RequestMessage);
+            //ResponseManager<string> _ResponseManager = new ResponseManager<string>();
+            //_ResponseManager.StatusCode = ResponseCode.Accepted;
+            //_ResponseManager.HeaderField.ResponseType = ContentTypes.text;
+            //_ResponseManager.HeaderField.TextType = TextTypes.plain;
+            //_ResponseManager.Body = "Test client";
 
             string returnMessage = _ResponseManager.Response;
             byte[] responseBytes = Encoding.UTF8.GetBytes(returnMessage);
 
-            Thread.Sleep(5000);
             networkStream.Write(responseBytes, 0, responseBytes.Length);
             networkStream.Close();
             client.Close();

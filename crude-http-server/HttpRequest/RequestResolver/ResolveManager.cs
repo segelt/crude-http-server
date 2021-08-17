@@ -149,6 +149,15 @@ namespace crude_http_server.HttpRequest.RequestResolver
                 throw new Exception();
             }
         } 
+        
+        public static ResponseManager ResolveRequest(string Request)
+        {
+            RequestManager _Request = new RequestManager();
+
+            _Request.ParseRequest(Request);
+
+            return ResolveMethod(_Request);
+        }
         #endregion
     }
 }
