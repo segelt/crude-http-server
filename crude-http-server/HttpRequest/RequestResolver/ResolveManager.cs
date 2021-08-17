@@ -163,7 +163,8 @@ namespace crude_http_server.HttpRequest.RequestResolver
             catch(HttpExceptionBase ex)
             {
                 // return error page
-                return null;
+                ErroneousResponse<HttpExceptionBase> _ErrorResponse = new ErroneousResponse<HttpExceptionBase>() { ThrownException = ex };
+                return _ErrorResponse;
             }
         }
         #endregion

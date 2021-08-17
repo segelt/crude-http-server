@@ -12,7 +12,6 @@ namespace crude_http_server.Exceptions
         public MethodNotResolvedException(string RequestURI) : base("The given method was not found.", RequestURI)
         {
             this.HttpResponseCode = ResponseCode.NotFound;
-            this.SetRequestURI(RequestURI);
         }
     }
 }

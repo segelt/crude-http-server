@@ -1,4 +1,5 @@
-﻿using crude_http_server.Utils;
+﻿using crude_http_server.Exceptions;
+using crude_http_server.Utils;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -66,6 +67,27 @@ namespace crude_http_server.HttpResponse
             _Response.Append(StatusLine);
 
             string BodyInStrFormat = Body.ToString();
+            HeaderField.ContentLength = string.IsNullOrEmpty(BodyInStrFormat) ? 0 : BodyInStrFormat.Length;
+
+            _Response.Append(HeaderField.GenerateHeaderFields());
+
+            _Response.Append($"{BodyInStrFormat}");
+
+            return _Response.ToString();
+        }
+    }
+
+    public class ErroneousResponse<T> : ResponseManager where T : HttpExceptionBase
+    {
+        public T ThrownException { get; set; }
+
+        protected override string GenerateResponse()
+        {
+            StringBuilder _Response = new StringBuilder("");
+            string StatusLine = $"{Constants.Protocol} {(int)ThrownException.HttpResponseCode} {ThrownException.HttpResponseCode.GetAttribute<DisplayAttribute>()?.Name}\r\n";
+            _Response.Append(StatusLine);
+
+            string BodyInStrFormat = $"{ThrownException.Message} \nStack trace ------ \n{ThrownException.StackTrace}";
             HeaderField.ContentLength = string.IsNullOrEmpty(BodyInStrFormat) ? 0 : BodyInStrFormat.Length;
 
             _Response.Append(HeaderField.GenerateHeaderFields());
