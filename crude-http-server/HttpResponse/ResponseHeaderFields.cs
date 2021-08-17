@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace crude_http_server.HttpResponse
 {
-    public class HeaderFields
+    public class ResponseHeaderFields
     {
         [Display(Name ="Date")]
         public string Date { get
@@ -217,7 +217,7 @@ namespace crude_http_server.HttpResponse
             }
         }
 
-        public HeaderFields()
+        public ResponseHeaderFields()
         {
 
         }
@@ -237,7 +237,7 @@ namespace crude_http_server.HttpResponse
 
         private string GetPropertyDisplayName(string propertyName)
         {
-            MemberInfo property = typeof(HeaderFields).GetProperty(propertyName);
+            MemberInfo property = typeof(ResponseHeaderFields).GetProperty(propertyName);
             return property.GetCustomAttribute<DisplayAttribute>()?.Name;
         }
     }

@@ -1,4 +1,5 @@
-﻿using crude_http_server.Utils;
+﻿using crude_http_server.Exceptions;
+using crude_http_server.Utils;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -22,8 +23,6 @@ namespace crude_http_server.HttpResponse
 
         //internal StringBuilder _Response;
 
-        public string Body { get; set; }
-
         public string Response { 
             get
             {
@@ -31,13 +30,13 @@ namespace crude_http_server.HttpResponse
             }
         }
 
-        private HeaderFields _HeaderField;
-        public HeaderFields HeaderField { 
+        private ResponseHeaderFields _HeaderField;
+        public ResponseHeaderFields HeaderField { 
             get
             {
                 if(_HeaderField == null)
                 {
-                    _HeaderField = new HeaderFields();
+                    _HeaderField = new ResponseHeaderFields();
                 }
                 return _HeaderField;
             }
@@ -45,19 +44,64 @@ namespace crude_http_server.HttpResponse
 
         public ResponseCode StatusCode { get; set; }
 
-        protected string GenerateResponse()
+        protected virtual string GenerateResponse()
         {
             StringBuilder _Response = new StringBuilder("");
             string StatusLine = $"{Constants.Protocol} {(int)StatusCode} {StatusCode.GetAttribute<DisplayAttribute>().Name}\r\n";
             _Response.Append(StatusLine);
-            HeaderField.ContentLength = string.IsNullOrEmpty(Body) ? 0 : Body.Length;
+            HeaderField.ContentLength = 0;
+
+            _Response.Append(HeaderField.GenerateHeaderFields());
+            return _Response.ToString();
+        }
+    }
+
+    public class ResponseManager<T> : ResponseManager
+    {
+        public T Body { get; set; }
+
+        protected override string GenerateResponse()
+        {
+            StringBuilder _Response = new StringBuilder("");
+            string StatusLine = $"{Constants.Protocol} {(int)StatusCode} {StatusCode.GetAttribute<DisplayAttribute>().Name}\r\n";
+            _Response.Append(StatusLine);
+
+            string BodyInStrFormat = Body.ToString();
+            HeaderField.ContentLength = string.IsNullOrEmpty(BodyInStrFormat) ? 0 : BodyInStrFormat.Length;
 
             _Response.Append(HeaderField.GenerateHeaderFields());
 
-            if (!string.IsNullOrEmpty(Body))
+            _Response.Append($"{BodyInStrFormat}");
+
+            return _Response.ToString();
+        }
+    }
+
+    public class ErroneousResponse<T> : ResponseManager where T : HttpExceptionBase
+    {
+        private T _ThrownException;
+        public T ThrownException
+        {
+            get { return _ThrownException; }
+            set
             {
-                _Response.Append($"{Body}");
+                _ThrownException = value;
+                this.StatusCode = value.HttpResponseCode;
             }
+        }
+
+        protected override string GenerateResponse()
+        {
+            StringBuilder _Response = new StringBuilder("");
+            string StatusLine = $"{Constants.Protocol} {(int)StatusCode} {StatusCode.GetAttribute<DisplayAttribute>()?.Name}\r\n";
+            _Response.Append(StatusLine);
+
+            string BodyInStrFormat = $"{ThrownException.Message} \nStack trace ------ \n{ThrownException.StackTrace}";
+            HeaderField.ContentLength = string.IsNullOrEmpty(BodyInStrFormat) ? 0 : BodyInStrFormat.Length;
+
+            _Response.Append(HeaderField.GenerateHeaderFields());
+
+            _Response.Append($"{BodyInStrFormat}");
 
             return _Response.ToString();
         }
